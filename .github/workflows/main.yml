@@ -1,0 +1,48 @@
+name: Build iOS IPA (Lua App)
+
+on:
+  workflow_dispatch: # يتيح لك تشغيل التجميع يدوياً بضغطة زر
+
+jobs:
+  build-ios:
+    runs-on: macos-13 # سنستخدم كمبيوتر ماك افتراضي
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Extract Project Files
+        run: |
+          # فك ضغط ملف مشروعك (افترضنا أن اسمه project.zip)
+          unzip *.zip -d app_contents || echo "No zip file found, checking direct files."
+
+      - name: Install Love2D for iOS Setup
+        run: |
+          # تحميل أدوات التجميع الخاصة بـ iOS والمحرك المفتوح المصدر لـ Lua
+          curl -L -o love.ios.zip https://github.com/love2d/love/releases/download/11.5/love-11.5-ios-source.zip
+          unzip love.ios.zip -d love_src
+
+      - name: Inject Lua Code into Application Bundle
+        run: |
+          # دمج أكوادك التي كتبتها بيدك داخل بنية التطبيق لتصبح تطبيقاً واحداً
+          cd love_src/*
+          mkdir -p love.app/game
+          if [ -d "../../app_contents" ]; then
+            cp -r ../../app_contents/* love.app/game/
+          else
+            cp *.lua love.app/game/ || true
+          fi
+
+      - name: Package to Payload for IPA
+        run: |
+          # تحويل البنية إلى مجلد Payload وهو الأساس لصناعة ملف الـ IPA للآيفون
+          cd love_src/*
+          mkdir Payload
+          mv love.app Payload/YourApp.app
+          zip -r ../../YourApp.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: My-Lua-App-IPA
+          path: YourApp.ipa
