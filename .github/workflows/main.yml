@@ -26,23 +26,15 @@ jobs:
           curl -L -o love-ios.zip https://github.com/love2d/love/releases/download/11.5/love-11.5-ios-source.zip
           unzip love-ios.zip -d love-ios-src
 
-      - name: Prepare Xcode Project
-        run: |
-          # هنا نقوم بنسخ ملفات كود الـ Lua الخاص بك إلى داخل مجلد الـ Love2D لدمجها
-          echo "Preparing game files..."
-          # ملاحظة: سنقوم بإنشاء هيكلية الحزمة وتجهيزها للبناء بدون الحاجة لتوقيع رسمي معقد للتجربة (Ad-hoc/Simulator)
-          
       - name: Build IPA using xcodebuild
         run: |
-          cd love-ios-src/love-* 
-          # أمر بناء التطبيق بدون الحاجة لحساب مطورين مدفوع (توقيع محلي/وهمي)
-          xcodebuild -project love.xcodeproj -scheme "love-ios" -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO
+          cd love-ios-src/love-11.5-ios-source
+          xcodebuild -project love.xcodeproj -scheme "love-ios" -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
       - name: Package as IPA
         run: |
           mkdir -p Payload
-          # نقل التطبيق الناتج إلى مجلد الـ Payload وضغطه كـ IPA
-          cp -r love-ios-src/love-*/build/Release-iphoneos/*.app Payload/ 2>/dev/null || true
+          cp -r love-ios-src/love-11.5-ios-source/build/Release-iphoneos/*.app Payload/ 2>/dev/null || true
           zip -r BlueBoxGame.ipa Payload
 
       - name: Upload Finished IPA
